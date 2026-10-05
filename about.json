@@ -1,0 +1,12 @@
+{
+  "name": "discourse-city-location-precision",
+  "about": "Enforces the coordinate-precision invariant of the City Improvements PRD (section 4.5, decision D8)",
+  "version": "0.1.0",
+  "authors": "City Improvements",
+  "url": "https://github.com/mevoc/discourse-city-location-precision",
+  "tests": {
+    "requiredPlugins": [
+      "https://github.com/paviliondev/discourse-locations.git"
+    ]
+  }
+}

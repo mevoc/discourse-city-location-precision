@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  plugin:
+    # Discourse's own plugin pipeline: linting, RSpec, Zeitwerk eager-load and
+    # reload checks, and compatibility validation. discourse-locations is cloned
+    # from about.json's tests.requiredPlugins, because the spec cannot boot
+    # without Locations::TopicLocationStore to prepend.
+    #
+    # Note: requiredPlugins clones the branch tip, while app.yml in the main repo
+    # pins a commit. That divergence is deliberate — CI tells us when upstream
+    # moves the write path this plugin prepends, which is exactly the failure the
+    # pin is there to prevent in production.
+    uses: discourse/.github/.github/workflows/discourse-plugin.yml@v1

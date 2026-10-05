@@ -1,0 +1,3 @@
+en:
+  site_settings:
+    city_location_coordinate_decimals: "Decimal places kept when a topic coordinate is stored. 3 is about 110 m north-south and 62 m east-west at Helsingborg's latitude. Lower this for a sparser area, where a finer grid can resolve a single property. Raising it weakens a privacy guarantee the PRD treats as non-negotiable."

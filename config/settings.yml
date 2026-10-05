@@ -1,0 +1,10 @@
+plugins:
+  city_location_coordinate_decimals:
+    default: 3
+    min: 0
+    # PRD section 4.5 states "at most three decimal places". The grid is a per-instance
+    # bundle parameter that may only go COARSER, so the maximum is the PRD's floor, not
+    # the plugin's. A higher bound would be an off switch for the guarantee.
+    max: 3
+    client: false
+    hidden: true

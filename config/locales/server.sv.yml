@@ -1,0 +1,3 @@
+sv:
+  site_settings:
+    city_location_coordinate_decimals: "Antal decimaler som sparas för en platskoordinat. 3 motsvarar cirka 110 m i nord-sydlig och 62 m i öst-västlig riktning på Helsingborgs breddgrad. Sänk värdet för glesare orter, där ett finare rutnät kan peka ut en enskild fastighet. Att höja det försvagar en integritetsgaranti som kravspecifikationen behandlar som icke förhandlingsbar."
