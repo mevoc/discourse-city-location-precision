@@ -136,6 +136,10 @@ describe CityLocationPrecision do
         topic: topic,
         location: { "geo_location" => { "lat" => "56.046467", "lon" => "12.694512" } },
       )
+      # `assign` writes the custom field in memory and upserts the projection immediately;
+      # persisting the custom field is the caller's job. discourse-locations' own
+      # post_created hook does exactly this, so the test has to as well.
+      topic.save!
 
       stored = Locations::TopicLocationStore.fetch(topic.reload)
 

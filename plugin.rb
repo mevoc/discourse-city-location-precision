@@ -62,6 +62,26 @@ module ::CityLocationPrecision
       super(topic: topic, location: ::CityLocationPrecision.apply(location))
     end
   end
+
+  # Defence in depth, as a mixin rather than a class_eval so the Discourse
+  # NoMonkeyPatching cop is satisfied: the store prepend covers writes through
+  # TopicLocationStore.assign, but the invariant is about what is *persisted*. A rake task,
+  # an import, a projection rebuild or a direct model write would bypass it. This cannot.
+  module TopicLocationExtension
+    extend ActiveSupport::Concern
+
+    included { before_save :enforce_city_location_precision }
+
+    private
+
+    def enforce_city_location_precision
+      self.latitude = ::CityLocationPrecision.round_coordinate(latitude)
+      self.longitude = ::CityLocationPrecision.round_coordinate(longitude)
+      ::CityLocationPrecision::SUPPRESSED_PAYLOAD_KEYS.each do |column|
+        self[column] = nil if has_attribute?(column)
+      end
+    end
+  end
 end
 
 after_initialize do
@@ -93,16 +113,5 @@ after_initialize do
     ::Locations::TopicLocation.skip_callback(:validation, :after, callback, raise: false)
   end
 
-  # Defence in depth: the store hook covers every write that goes through
-  # TopicLocationStore.assign, but the invariant is about what is *persisted*. A rake task,
-  # an import, a projection rebuild or a direct model write would bypass it. This cannot.
-  ::Locations::TopicLocation.class_eval do
-    before_save do
-      self.latitude = ::CityLocationPrecision.round_coordinate(latitude)
-      self.longitude = ::CityLocationPrecision.round_coordinate(longitude)
-      ::CityLocationPrecision::SUPPRESSED_PAYLOAD_KEYS.each do |column|
-        self[column] = nil if has_attribute?(column)
-      end
-    end
-  end
+  ::Locations::TopicLocation.include(::CityLocationPrecision::TopicLocationExtension)
 end
