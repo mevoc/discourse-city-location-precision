@@ -3,9 +3,13 @@
 A Discourse plugin that is **one enforcement point, not a feature**. It exists so that the
 coordinate-precision guarantee of the City Improvements portal cannot be bypassed.
 
-The product context lives in **`~/projects/city-improvements`** — read its `CLAUDE.md` and
-`docs/city-improvements-portal-prd.md` §4.1, §4.5 and §4.6 before changing anything here.
-This repo holds no product decisions.
+The product context lives in **`mevoc/city-improvements`** (private) — its `CLAUDE.md` and
+`docs/city-improvements-portal-prd.md` §4.1, §4.5 and §4.6 are required reading before
+changing anything here. This repo holds no product decisions.
+
+If you are reading this from outside that project: the portal is a civic discussion platform
+where every submission carries the author's real name, which is why a coarse coordinate is a
+hard requirement rather than a setting. The rules below are the whole point of the plugin.
 
 ---
 
