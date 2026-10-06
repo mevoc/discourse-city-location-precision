@@ -3,7 +3,7 @@
 # about: Enforces the coordinate-precision invariant of the City Improvements PRD, section 4.5, decision D8
 # version: 0.1.0
 # authors: City Improvements
-# url: https://github.com/mevoc/city-improvements
+# url: https://github.com/mevoc/discourse-city-location-precision
 
 module ::CityLocationPrecision
   PLUGIN_NAME = "discourse-city-location-precision"
@@ -16,11 +16,29 @@ module ::CityLocationPrecision
   PERMITTED_GEO_KEYS = %w[lat lon].freeze
 
   # The projection reads payload[key] before geo_location[key], so the top level has to be
-  # cleared of the same components. "raw" — the resident's own free-text detail — is kept.
+  # cleared of the same components.
+  #
+  # `name` is NOT here: it is the one input in discourse-locations' add-location modal that a
+  # resident types themselves (rendered unconditionally, outside `location_input_fields`), and
+  # it is where PRD §4.5's free-text location detail lives. `raw` is not resident input either
+  # way — discourse-locations sets it from the geocoder's `address` — so it is suppressed.
   SUPPRESSED_PAYLOAD_KEYS = %w[
-    name street district city state postalcode country countrycode
+    raw street district city state postalcode country countrycode
     international_code locationtype boundingbox
   ].freeze
+
+  # `name` is only safe to keep while nothing can auto-populate it. With geocoding enabled it
+  # may hold geocoder output, so it is suppressed too — the resident's own text is preserved
+  # exactly when it can only be the resident's own text.
+  def self.geocoding_disabled?
+    SiteSetting.location_geocoding.to_s == "none"
+  rescue StandardError
+    false
+  end
+
+  def self.suppressed_keys
+    geocoding_disabled? ? SUPPRESSED_PAYLOAD_KEYS : SUPPRESSED_PAYLOAD_KEYS + %w[name]
+  end
 
   def self.decimals
     SiteSetting.city_location_coordinate_decimals
@@ -46,7 +64,7 @@ module ::CityLocationPrecision
     payload = ::Locations::Payload.parse(location)
     return location if payload.blank?
 
-    SUPPRESSED_PAYLOAD_KEYS.each { |key| payload.delete(key) }
+    suppressed_keys.each { |key| payload.delete(key) }
 
     geo = payload["geo_location"]
     if geo.is_a?(Hash)
@@ -77,7 +95,7 @@ module ::CityLocationPrecision
     def enforce_city_location_precision
       self.latitude = ::CityLocationPrecision.round_coordinate(latitude)
       self.longitude = ::CityLocationPrecision.round_coordinate(longitude)
-      ::CityLocationPrecision::SUPPRESSED_PAYLOAD_KEYS.each do |column|
+      ::CityLocationPrecision.suppressed_keys.each do |column|
         self[column] = nil if has_attribute?(column)
       end
     end

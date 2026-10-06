@@ -15,6 +15,11 @@ that method and, before the value is stored:
 2. **Keeps only `lat` and `lon`** inside `geo_location`, and strips the reverse-geocoded
    components from the top level too. This is an allowlist rather than a list of known-bad
    keys, so a column a future geocoder or schema adds is excluded by default.
+3. **Keeps `name`** — the one input in discourse-locations' add-location modal that a resident
+   types themselves, and where the portal's free-text location detail lives. It is kept *only*
+   while `location_geocoding` is `none`; with geocoding on, `name` may be geocoder output, so
+   it is suppressed as well. `raw` is always suppressed: discourse-locations fills it from the
+   geocoder's address, so it is never resident input.
 
 Because the hook sits at the store rather than in the wizard, it covers **every write path that
 goes through `TopicLocationStore.assign`** — which today is the submission wizard, the raw REST

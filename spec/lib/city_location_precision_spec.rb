@@ -129,6 +129,22 @@ describe CityLocationPrecision do
       expect(row.postalcode).to be_nil
     end
 
+    it "persists the resident's free-text detail in the projection's name column (§4.5)" do
+      topic = Fabricate(:topic)
+
+      Locations::TopicLocationStore.assign(
+        topic: topic,
+        location: {
+          "name" => "Vid busshållplatsen",
+          "geo_location" => { "lat" => "56.046467", "lon" => "12.694512" },
+        },
+      )
+
+      row = Locations::TopicLocation.find_by(topic_id: topic.id)
+
+      expect(row.name).to eq("Vid busshållplatsen")
+    end
+
     it "coarsens the canonical custom field too, not only the projection (§4.5)" do
       topic = Fabricate(:topic)
 
