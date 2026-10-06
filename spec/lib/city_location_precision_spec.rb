@@ -11,6 +11,10 @@ require "rails_helper"
 describe CityLocationPrecision do
   let(:fine) { { "geo_location" => { "lat" => "56.046467", "lon" => "12.694512" } } }
 
+  # `name` is preserved only while nothing can auto-populate it, so the portal's configuration
+  # (PRD §4.5: geocoding off) is a precondition of these examples, not incidental setup.
+  before { SiteSetting.location_geocoding = "none" }
+
   describe ".apply" do
     it "rounds coordinates to the configured grid (§4.5)" do
       result = described_class.apply(fine)
@@ -74,16 +78,32 @@ describe CityLocationPrecision do
 
       result = described_class.apply(payload)
 
-      described_class::SUPPRESSED_PAYLOAD_KEYS.each { |key| expect(result).not_to have_key(key) }
+      described_class.suppressed_keys.each { |key| expect(result).not_to have_key(key) }
       expect(result["geo_location"].keys).to contain_exactly("lat", "lon")
     end
 
-    it "leaves the resident's own free-text detail alone (§4.5)" do
-      payload = fine.merge("raw" => "Utanför Drottninggatan 15, vid busshållplatsen")
+    it "keeps the resident's own free-text detail, which is `name` (§4.5)" do
+      # `name` is the one input in discourse-locations' add-location modal that the resident
+      # types; `raw` is set from the geocoder's address, so it is not resident input.
+      payload = fine.merge("name" => "Utanför Drottninggatan 15, vid busshållplatsen")
 
       result = described_class.apply(payload)
 
-      expect(result["raw"]).to eq("Utanför Drottninggatan 15, vid busshållplatsen")
+      expect(result["name"]).to eq("Utanför Drottninggatan 15, vid busshållplatsen")
+    end
+
+    it "suppresses `name` when geocoding is on, since it may then be geocoder output" do
+      SiteSetting.location_geocoding = "optional"
+
+      result = described_class.apply(fine.merge("name" => "Drottninggatan 15"))
+
+      expect(result).not_to have_key("name")
+    end
+
+    it "suppresses `raw`, which discourse-locations fills from the geocoder" do
+      result = described_class.apply(fine.merge("raw" => "Drottninggatan 15, Helsingborg"))
+
+      expect(result).not_to have_key("raw")
     end
 
     it "passes through a payload with no coordinates" do
